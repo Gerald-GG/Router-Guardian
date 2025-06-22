@@ -1,0 +1,5 @@
+Interface==2.11.1
+scapy==2.6.1
+zope.event==5.0
+zope.interface==7.2
+zope.schema==7.0.1
