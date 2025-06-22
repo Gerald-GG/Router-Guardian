@@ -1,0 +1,12 @@
+# Bytecode and cache
+__pycache__/
+*.pyc
+
+# Data and logs
+backend/data/*.json
+backend/data/logs/
+
+# Redundant nested folders (if accidental)
+backend/backend/
+
+
