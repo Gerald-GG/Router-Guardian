@@ -4,7 +4,6 @@ function App() {
   const [devices, setDevices] = useState([]);
   const [filter, setFilter] = useState('all');
 
-  // Fetch devices from backend
   const fetchDevices = () => {
     fetch('http://localhost:5000/devices')
       .then(res => res.json())
@@ -14,7 +13,7 @@ function App() {
 
   useEffect(() => {
     fetchDevices();
-    const interval = setInterval(fetchDevices, 10000); // Auto-refresh every 10s
+    const interval = setInterval(fetchDevices, 30000); // Refresh every 30s
     return () => clearInterval(interval);
   }, []);
 
@@ -63,6 +62,7 @@ function App() {
             <th>IP</th>
             <th>MAC</th>
             <th>Status</th>
+            <th>Online Duration</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -72,6 +72,7 @@ function App() {
               <td>{device.ip || '—'}</td>
               <td>{device.mac}</td>
               <td>{device.status}</td>
+              <td>{device.online_duration || '—'}</td>
               <td>
                 {device.status === 'blocked' || device.status === 'scheduled' ? (
                   <button onClick={() => handleUnblock(device.mac)}>Unblock</button>
