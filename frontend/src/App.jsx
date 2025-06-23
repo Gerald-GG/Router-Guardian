@@ -13,7 +13,7 @@ function App() {
 
   useEffect(() => {
     fetchDevices();
-    const interval = setInterval(fetchDevices, 30000); // Refresh every 30s
+    const interval = setInterval(fetchDevices, 30000); // every 30s
     return () => clearInterval(interval);
   }, []);
 
@@ -23,8 +23,7 @@ function App() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mac, duration }),
-    })
-    .then(() => fetchDevices());
+    }).then(() => fetchDevices());
   };
 
   const handleUnblock = (mac) => {
@@ -32,14 +31,31 @@ function App() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mac }),
-    })
-    .then(() => fetchDevices());
+    }).then(() => fetchDevices());
   };
 
   const filteredDevices = devices.filter(device => {
     if (filter === 'all') return true;
     return device.status === filter;
   });
+
+  const formatDuration = (duration) => {
+    if (!duration) return '—';
+    const parts = duration.split(', ');
+    const timePart = parts[parts.length - 1];
+    const [h, m] = timePart.split(':');
+    const days = duration.includes('day') ? duration.split(' day')[0] + 'd ' : '';
+    return `${days}${parseInt(h)}h ${parseInt(m)}m`;
+  };
+
+  const statusColor = (status) => {
+    switch (status) {
+      case 'online': return 'green';
+      case 'blocked': return 'red';
+      case 'scheduled': return 'orange';
+      default: return 'gray';
+    }
+  };
 
   return (
     <div style={{ padding: '20px' }}>
@@ -56,9 +72,10 @@ function App() {
         </select>
       </div>
 
-      <table border="1" cellPadding="10" cellSpacing="0">
+      <table border="1" cellPadding="10" cellSpacing="0" style={{ width: '100%' }}>
         <thead>
           <tr>
+            <th>Hostname</th>
             <th>IP</th>
             <th>MAC</th>
             <th>Status</th>
@@ -69,12 +86,15 @@ function App() {
         <tbody>
           {filteredDevices.map((device, index) => (
             <tr key={index}>
+              <td>{device.hostname || '—'}</td>
               <td>{device.ip || '—'}</td>
               <td>{device.mac}</td>
-              <td>{device.status}</td>
-              <td>{device.online_duration || '—'}</td>
+              <td style={{ color: statusColor(device.status), fontWeight: 'bold' }}>
+                {device.status}
+              </td>
+              <td>{formatDuration(device.online_duration)}</td>
               <td>
-                {device.status === 'blocked' || device.status === 'scheduled' ? (
+                {(device.status === 'blocked' || device.status === 'scheduled') ? (
                   <button onClick={() => handleUnblock(device.mac)}>Unblock</button>
                 ) : (
                   <button onClick={() => handleBlock(device.mac)}>Block</button>
