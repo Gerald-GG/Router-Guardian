@@ -3,6 +3,8 @@ from scanner.device_scanner import get_gateway_ip, scan_network
 from router_control.router_interface import get_router_controller
 import json
 import os
+import platform
+import subprocess
 from datetime import datetime, timedelta
 
 api_blueprint = Blueprint('api', __name__)
@@ -28,6 +30,28 @@ def parse_duration(duration_str):
         return timedelta(minutes=int(duration_str[:-1]))
     else:
         raise ValueError("Invalid duration format. Use '1h', '30m', etc.")
+
+# ✅ Route: GET /wifi — get current SSID for Linux or Windows
+@api_blueprint.route('/wifi', methods=['GET'])
+def get_wifi():
+    try:
+        system = platform.system()
+
+        if system == 'Linux':
+            result = subprocess.check_output(['iwgetid', '--raw'], stderr=subprocess.DEVNULL)
+            ssid = result.decode().strip()
+        elif system == 'Windows':
+            result = subprocess.check_output(['netsh', 'wlan', 'show', 'interfaces'], stderr=subprocess.DEVNULL)
+            lines = result.decode(errors='ignore').split('\n')
+            ssid = next((line.split(':')[1].strip() for line in lines if 'SSID' in line and 'BSSID' not in line), 'Unknown')
+        else:
+            ssid = 'Unsupported OS'
+
+        return jsonify({'ssid': ssid or 'Unavailable'}), 200
+
+    except Exception as e:
+        print(f"[Wi-Fi SSID Error] {e}")
+        return jsonify({'ssid': 'Unavailable'}), 500
 
 # Route: GET /scan — live network scan without block history
 @api_blueprint.route('/scan', methods=['GET'])

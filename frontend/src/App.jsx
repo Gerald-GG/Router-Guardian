@@ -14,9 +14,20 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [refreshOn, setRefreshOn] = useState(true);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+  const [ssid, setSsid] = useState('Fetching...');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [viewMode, setViewMode] = useState('laptop');
 
+  // Fetch SSID on load
+  useEffect(() => {
+    fetch('http://localhost:5000/wifi')
+      .then(res => res.json())
+      .then(data => setSsid(data.ssid || 'Unavailable'))
+      .catch(() => setSsid('Unavailable'));
+  }, []);
+
+  // Device auto-refresh logic
   useEffect(() => {
     const fetchDevices = () => {
       fetch('http://localhost:5000/devices')
@@ -31,18 +42,23 @@ function App() {
     return () => clearInterval(interval);
   }, [refreshOn]);
 
+  // Handle dark mode
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
     localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
 
+  // Block device
   const handleBlock = async (mac) => {
+    const duration = prompt('Enter block duration (e.g. 1h, 30m):');
+    if (!duration) return;
+
     setIsLoading(true);
     try {
       await fetch('http://localhost:5000/block', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mac, duration: '1h' }),
+        body: JSON.stringify({ mac, duration }),
       });
       refreshDevices();
     } catch (err) {
@@ -52,6 +68,7 @@ function App() {
     }
   };
 
+  // Unblock device
   const handleUnblock = async (mac) => {
     setIsLoading(true);
     try {
@@ -119,6 +136,14 @@ function App() {
         Router Guardian - Device List
       </h1>
 
+      {/* Display current connected Wi-Fi SSID */}
+      <div className="text-center mb-3">
+        <span className="inline-block px-4 py-2 bg-blue-100 text-blue-900 rounded-full dark:bg-blue-900 dark:text-blue-100 shadow">
+          Connected Wi-Fi: <strong>{ssid}</strong>
+        </span>
+      </div>
+
+      {/* Controls: Search, Refresh, Theme */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <input
           type="text"
@@ -128,7 +153,6 @@ function App() {
           className="w-full sm:max-w-md border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring focus:border-blue-300"
         />
         <div className="flex items-center gap-4">
-          <span className="text-gray-500 dark:text-gray-300">Total: {filteredDevices.length}</span>
           <button
             onClick={() => setRefreshOn(prev => !prev)}
             className={`px-4 py-2 rounded-lg shadow text-white ${refreshOn ? 'bg-green-600' : 'bg-gray-500'} hover:opacity-90 transition`}
@@ -144,6 +168,7 @@ function App() {
         </div>
       </div>
 
+      {/* Device Table */}
       <div className="overflow-x-auto rounded-xl shadow-md">
         <table className="min-w-full table-auto text-sm border-collapse text-center">
           <thead className="sticky top-0 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold">
@@ -197,7 +222,7 @@ function App() {
         </table>
       </div>
 
-      {/* Enhanced Pagination */}
+      {/* Pagination */}
       <div className="flex justify-center items-center gap-4 mt-6">
         <button
           onClick={goToPrev}
@@ -216,6 +241,25 @@ function App() {
         >
           Next ➡
         </button>
+      </div>
+
+      {/* View Mode Switch */}
+      <div className="flex justify-center items-center gap-4 mt-8">
+        {['mobile', 'tablet', 'laptop'].map(mode => (
+          <button
+            key={mode}
+            onClick={() => setViewMode(mode)}
+            className={`px-4 py-2 rounded-full shadow text-white transition ${
+              viewMode === mode
+                ? 'bg-blue-600'
+                : 'bg-gray-400 hover:bg-gray-500'
+            }`}
+          >
+            {mode === 'mobile' && '📱'}
+            {mode === 'tablet' && '📲'}
+            {mode === 'laptop' && '💻'}
+          </button>
+        ))}
       </div>
     </div>
   );
