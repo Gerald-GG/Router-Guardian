@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 
+const formatDuration = (duration) => {
+  if (!duration) return '-';
+  const parts = duration.split(',');
+  return parts.length > 1 ? `${parts[0]} ${parts[1].trim()}` : parts[0];
+};
+
 function App() {
   const [devices, setDevices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
