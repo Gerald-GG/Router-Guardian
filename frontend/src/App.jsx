@@ -10,6 +10,15 @@ const formatDuration = (duration) => {
 };
 
 // =======================
+// Utility: Format ISO timestamp
+// =======================
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return '-';
+  const date = new Date(timestamp);
+  return date.toLocaleString();
+};
+
+// =======================
 // Component: StatusBadge
 // =======================
 const StatusBadge = ({ status }) => {
@@ -39,11 +48,16 @@ const StatusBadge = ({ status }) => {
 
 function App() {
   // =======================
+  // API Base URL for Render deployment
+  // =======================
+  const BASE_URL = 'https://router-guardian.onrender.com';
+
+  // =======================
   // State definitions
   // =======================
   const [devices, setDevices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortKey, setSortKey] = useState('hostname');
+  const [sortKey, setSortKey] = useState('ip');
   const [sortOrder, setSortOrder] = useState('asc');
   const [isLoading, setIsLoading] = useState(false);
   const [refreshOn, setRefreshOn] = useState(true);
@@ -57,7 +71,7 @@ function App() {
   // Fetch SSID on load
   // =======================
   useEffect(() => {
-    fetch('http://localhost:5000/wifi')
+    fetch(`${BASE_URL}/wifi`)
       .then(res => res.json())
       .then(data => setSsid(data.ssid || 'Unavailable'))
       .catch(() => setSsid('Unavailable'));
@@ -67,7 +81,7 @@ function App() {
   // Fetch devices function
   // =======================
   const fetchDevices = () => {
-    fetch('http://localhost:5000/devices')
+    fetch(`${BASE_URL}/devices`)
       .then(res => res.json())
       .then(data => setDevices(data))
       .catch(err => console.error('Failed to fetch devices:', err));
@@ -100,7 +114,7 @@ function App() {
 
     setIsLoading(true);
     try {
-      await fetch('http://localhost:5000/block', {
+      await fetch(`${BASE_URL}/block`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mac, duration }),
@@ -119,7 +133,7 @@ function App() {
   const handleUnblock = async (mac) => {
     setIsLoading(true);
     try {
-      await fetch('http://localhost:5000/unblock', {
+      await fetch(`${BASE_URL}/unblock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mac }),
@@ -233,6 +247,8 @@ function App() {
               <th className="p-3 border" onClick={() => toggleSort('mac')}>MAC</th>
               <th className="p-3 border" onClick={() => toggleSort('status')}>Status</th>
               <th className="p-3 border" onClick={() => toggleSort('online_duration')}>Online Duration</th>
+              <th className="p-3 border">First Seen</th>
+              <th className="p-3 border">Last Seen</th>
               <th className="p-3 border">Blocked</th>
               <th className="p-3 border">Action</th>
             </tr>
@@ -256,6 +272,8 @@ function App() {
                     </td>
 
                     <td className="p-3 border">{formatDuration(device.online_duration)}</td>
+                    <td className="p-3 border">{formatTimestamp(device.first_seen)}</td>
+                    <td className="p-3 border">{formatTimestamp(device.last_seen)}</td>
                     <td className="p-3 border">{isBlocked ? 'Yes' : 'No'}</td>
                     <td className="p-3 border">
                       {isBlocked ? (
@@ -281,7 +299,7 @@ function App() {
               })
             ) : (
               <tr>
-                <td colSpan="7" className="p-6 text-center text-gray-500 dark:text-gray-400 italic">
+                <td colSpan="9" className="p-6 text-center text-gray-500 dark:text-gray-400 italic">
                   No devices found.
                 </td>
               </tr>
@@ -309,23 +327,6 @@ function App() {
         >
           Next ➡
         </button>
-      </div>
-
-      {/* View Mode Switch */}
-      <div className="flex justify-center items-center gap-4 mt-8">
-        {['mobile', 'tablet', 'laptop'].map(mode => (
-          <button
-            key={mode}
-            onClick={() => setViewMode(mode)}
-            className={`px-4 py-2 rounded-full shadow text-white transition ${
-              viewMode === mode ? 'bg-blue-600' : 'bg-gray-400 hover:bg-gray-500'
-            }`}
-          >
-            {mode === 'mobile' && '📱'}
-            {mode === 'tablet' && '📲'}
-            {mode === 'laptop' && '💻'}
-          </button>
-        ))}
       </div>
     </div>
   );

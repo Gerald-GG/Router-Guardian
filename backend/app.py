@@ -7,6 +7,11 @@ import os
 from dotenv import load_dotenv
 
 # ==============================
+# Import scanner functions
+# ==============================
+from scanner.device_scanner import scan_network, get_gateway_ip
+
+# ==============================
 # Load environment variables from .env in project root
 # ==============================
 load_dotenv()
@@ -68,44 +73,20 @@ def get_wifi():
         return jsonify({'ssid': 'Unavailable'})
 
 # ==============================
-# /devices route: Return dummy device data
-# Replace with live scanner data in future
+# /devices route: Return real scanned device data
 # ==============================
 @app.route('/devices', methods=['GET'])
 def get_devices():
     print("[INFO] /devices endpoint called")
     try:
-        devices = [
-            {
-                'hostname': 'Unknown',
-                'ip': '192.168.100.1',
-                'mac': '30:e9:8e:63:c5:74',
-                'status': 'online',
-                'online_duration': '4 days, 2:23:19.137918',
-                'blocked': False
-            },
-            {
-                'hostname': 'Unknown',
-                'ip': '192.168.100.6',
-                'mac': '08:40:f3:d1:8e:18',
-                'status': 'online',
-                'online_duration': '4 days, 2:23:19.137918',
-                'blocked': False
-            },
-            {
-                'hostname': 'Unknown',
-                'ip': '192.168.100.10',
-                'mac': '9e:6c:6d:b2:ee:6d',
-                'status': 'online',
-                'online_duration': '4 days, 2:21:43.457548',
-                'blocked': False
-            }
-        ]
-        print(f"[DEBUG] Returning {len(devices)} dummy devices")
+        gateway_ip = get_gateway_ip()
+        ip_range = gateway_ip + "/24"
+        devices = scan_network(ip_range)
+        print(f"[DEBUG] Returning {len(devices)} scanned devices")
         return jsonify(devices)
 
     except Exception as e:
-        print(f"[ERROR] Failed to get devices: {e}")
+        print(f"[ERROR] Failed to scan devices: {e}")
         traceback.print_exc()
         return jsonify([])
 
