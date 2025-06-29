@@ -29,6 +29,13 @@ def log_request_info():
     print(f"[REQUEST] Method: {request.method} URL: {request.url}")
 
 # ==============================
+# Root route for health check
+# ==============================
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({'message': 'Router Guardian API is running.'})
+
+# ==============================
 # /wifi route: Return current Wi-Fi SSID
 # ==============================
 @app.route('/wifi', methods=['GET'])
