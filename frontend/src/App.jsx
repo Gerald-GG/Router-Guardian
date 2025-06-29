@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+// Utility: Format device online duration
 const formatDuration = (duration) => {
   if (!duration) return '-';
   const parts = duration.split(',');
@@ -7,6 +8,9 @@ const formatDuration = (duration) => {
 };
 
 function App() {
+  // =======================
+  // State definitions
+  // =======================
   const [devices, setDevices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortKey, setSortKey] = useState('hostname');
@@ -19,7 +23,9 @@ function App() {
   const itemsPerPage = 5;
   const [viewMode, setViewMode] = useState('laptop');
 
+  // =======================
   // Fetch SSID on load
+  // =======================
   useEffect(() => {
     fetch('http://localhost:5000/wifi')
       .then(res => res.json())
@@ -27,7 +33,9 @@ function App() {
       .catch(() => setSsid('Unavailable'));
   }, []);
 
+  // =======================
   // Device auto-refresh logic
+  // =======================
   useEffect(() => {
     const fetchDevices = () => {
       fetch('http://localhost:5000/devices')
@@ -42,13 +50,17 @@ function App() {
     return () => clearInterval(interval);
   }, [refreshOn]);
 
-  // Handle dark mode
+  // =======================
+  // Handle dark mode toggle
+  // =======================
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
     localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
 
-  // Block device
+  // =======================
+  // Block a device
+  // =======================
   const handleBlock = async (mac) => {
     const duration = prompt('Enter block duration (e.g. 1h, 30m):');
     if (!duration) return;
@@ -68,7 +80,9 @@ function App() {
     }
   };
 
-  // Unblock device
+  // =======================
+  // Unblock a device
+  // =======================
   const handleUnblock = async (mac) => {
     setIsLoading(true);
     try {
@@ -85,6 +99,9 @@ function App() {
     }
   };
 
+  // =======================
+  // Refresh device list manually
+  // =======================
   const refreshDevices = () => {
     fetch('http://localhost:5000/devices')
       .then(res => res.json())
@@ -92,6 +109,9 @@ function App() {
       .catch(err => console.error('Failed to refresh devices:', err));
   };
 
+  // =======================
+  // Filter and sort devices
+  // =======================
   const filteredDevices = devices.filter(device =>
     [device.hostname, device.ip, device.mac, device.status]
       .join(' ')
@@ -105,6 +125,9 @@ function App() {
     return sortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
   });
 
+  // =======================
+  // Row style based on status
+  // =======================
   const getRowStyle = (status, duration) => {
     if (status === 'blocked') return 'bg-red-50 dark:bg-red-900';
     if (status === 'scheduled') return 'bg-yellow-50 dark:bg-yellow-900';
@@ -113,6 +136,9 @@ function App() {
     return '';
   };
 
+  // =======================
+  // Sort toggle handler
+  // =======================
   const toggleSort = (key) => {
     if (sortKey === key) setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     else {
@@ -121,6 +147,9 @@ function App() {
     }
   };
 
+  // =======================
+  // Pagination logic
+  // =======================
   const totalPages = Math.ceil(sortedDevices.length / itemsPerPage);
   const paginatedDevices = sortedDevices.slice(
     (currentPage - 1) * itemsPerPage,
@@ -130,20 +159,23 @@ function App() {
   const goToNext = () => currentPage < totalPages && setCurrentPage(prev => prev + 1);
   const goToPrev = () => currentPage > 1 && setCurrentPage(prev => prev - 1);
 
+  // =======================
+  // JSX render
+  // =======================
   return (
     <div className="p-6 max-w-screen-lg mx-auto">
       <h1 className="text-4xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
         Router Guardian - Device List
       </h1>
 
-      {/* Display current connected Wi-Fi SSID */}
+      {/* Connected Wi-Fi SSID */}
       <div className="text-center mb-3">
         <span className="inline-block px-4 py-2 bg-blue-100 text-blue-900 rounded-full dark:bg-blue-900 dark:text-blue-100 shadow">
           Connected Wi-Fi: <strong>{ssid}</strong>
         </span>
       </div>
 
-      {/* Controls: Search, Refresh, Theme */}
+      {/* Controls: Search, Auto Refresh, Dark Mode */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <input
           type="text"
@@ -183,41 +215,49 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            {paginatedDevices.map((device, i) => {
-              const isBlocked = device.status === 'blocked' || device.status === 'scheduled';
-              return (
-                <tr
-                  key={i}
-                  className={`${getRowStyle(device.status, device.online_duration)} border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800`}
-                >
-                  <td className="p-3 border">{device.hostname || 'Unknown'}</td>
-                  <td className="p-3 border">{device.ip}</td>
-                  <td className="p-3 border">{device.mac}</td>
-                  <td className="p-3 border capitalize">{device.status}</td>
-                  <td className="p-3 border">{formatDuration(device.online_duration)}</td>
-                  <td className="p-3 border">{isBlocked ? 'Yes' : 'No'}</td>
-                  <td className="p-3 border">
-                    {isBlocked ? (
-                      <button
-                        onClick={() => handleUnblock(device.mac)}
-                        disabled={isLoading}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded shadow"
-                      >
-                        Unblock
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleBlock(device.mac)}
-                        disabled={isLoading}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow"
-                      >
-                        Block
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {paginatedDevices.length > 0 ? (
+              paginatedDevices.map((device, i) => {
+                const isBlocked = device.status === 'blocked' || device.status === 'scheduled';
+                return (
+                  <tr
+                    key={i}
+                    className={`${getRowStyle(device.status, device.online_duration)} border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800`}
+                  >
+                    <td className="p-3 border">{device.hostname || 'Unknown'}</td>
+                    <td className="p-3 border">{device.ip}</td>
+                    <td className="p-3 border">{device.mac}</td>
+                    <td className="p-3 border capitalize">{device.status}</td>
+                    <td className="p-3 border">{formatDuration(device.online_duration)}</td>
+                    <td className="p-3 border">{isBlocked ? 'Yes' : 'No'}</td>
+                    <td className="p-3 border">
+                      {isBlocked ? (
+                        <button
+                          onClick={() => handleUnblock(device.mac)}
+                          disabled={isLoading}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded shadow"
+                        >
+                          Unblock
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleBlock(device.mac)}
+                          disabled={isLoading}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow"
+                        >
+                          Block
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="7" className="p-6 text-center text-gray-500 dark:text-gray-400 italic">
+                  No devices found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -250,9 +290,7 @@ function App() {
             key={mode}
             onClick={() => setViewMode(mode)}
             className={`px-4 py-2 rounded-full shadow text-white transition ${
-              viewMode === mode
-                ? 'bg-blue-600'
-                : 'bg-gray-400 hover:bg-gray-500'
+              viewMode === mode ? 'bg-blue-600' : 'bg-gray-400 hover:bg-gray-500'
             }`}
           >
             {mode === 'mobile' && '📱'}
