@@ -9,5 +9,9 @@ backend/data/logs/
 # Redundant nested folders (if accidental)
 backend/backend/
 
-
+# Virtual environment
 venv/
+
+# Environment variables file
+.env
+node_modules/

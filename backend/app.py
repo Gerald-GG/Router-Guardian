@@ -3,6 +3,17 @@ import subprocess
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import traceback
+import os
+from dotenv import load_dotenv
+
+# ==============================
+# Load environment variables from .env in project root
+# ==============================
+load_dotenv()
+
+# Example: reading a SECRET_KEY or API_URL from .env
+SECRET_KEY = os.getenv("SECRET_KEY", "default_secret")
+API_URL = os.getenv("API_URL", "http://localhost:5000")
 
 # ==============================
 # Initialize the Flask app
