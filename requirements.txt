@@ -23,7 +23,7 @@ awscrt>=0.27.0,<1
 azure-agrifood-farming==1.0.0b2
 azure-ai-anomalydetector==3.0.0b6
 azure-ai-formrecognizer==3.2.1
-azure-ai-language-conversations==1.1.0b4
+azure-ai-language-conversations==1.1.0b3
 azure-ai-language-questionanswering==1.1.1
 azure-ai-metricsadvisor==1.1.0
 azure-ai-ml==1.4.0
