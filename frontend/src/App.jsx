@@ -1,10 +1,40 @@
 import { useEffect, useState } from 'react';
 
+// =======================
 // Utility: Format device online duration
+// =======================
 const formatDuration = (duration) => {
   if (!duration) return '-';
   const parts = duration.split(',');
   return parts.length > 1 ? `${parts[0]} ${parts[1].trim()}` : parts[0];
+};
+
+// =======================
+// Component: StatusBadge
+// =======================
+const StatusBadge = ({ status }) => {
+  let bgColor = 'bg-gray-500';
+  let text = status;
+
+  switch (status) {
+    case 'online':
+      bgColor = 'bg-green-500';
+      break;
+    case 'blocked':
+      bgColor = 'bg-red-500';
+      break;
+    case 'scheduled':
+      bgColor = 'bg-yellow-500';
+      break;
+    default:
+      bgColor = 'bg-gray-500';
+  }
+
+  return (
+    <span className={`text-white px-2 py-1 rounded-full text-xs capitalize ${bgColor}`}>
+      {text}
+    </span>
+  );
 };
 
 function App() {
@@ -34,19 +64,22 @@ function App() {
   }, []);
 
   // =======================
+  // Fetch devices function
+  // =======================
+  const fetchDevices = () => {
+    fetch('http://localhost:5000/devices')
+      .then(res => res.json())
+      .then(data => setDevices(data))
+      .catch(err => console.error('Failed to fetch devices:', err));
+  };
+
+  // =======================
   // Device auto-refresh logic
   // =======================
   useEffect(() => {
-    const fetchDevices = () => {
-      fetch('http://localhost:5000/devices')
-        .then(res => res.json())
-        .then(data => setDevices(data))
-        .catch(err => console.error('Failed to fetch devices:', err));
-    };
-
-    fetchDevices();
+    fetchDevices(); // initial fetch
     let interval;
-    if (refreshOn) interval = setInterval(fetchDevices, 30000);
+    if (refreshOn) interval = setInterval(fetchDevices, 30000); // refresh every 30s
     return () => clearInterval(interval);
   }, [refreshOn]);
 
@@ -72,7 +105,7 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mac, duration }),
       });
-      refreshDevices();
+      fetchDevices(); // refresh after block
     } catch (err) {
       console.error('Block failed:', err);
     } finally {
@@ -91,22 +124,12 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mac }),
       });
-      refreshDevices();
+      fetchDevices(); // refresh after unblock
     } catch (err) {
       console.error('Unblock failed:', err);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // =======================
-  // Refresh device list manually
-  // =======================
-  const refreshDevices = () => {
-    fetch('http://localhost:5000/devices')
-      .then(res => res.json())
-      .then(data => setDevices(data))
-      .catch(err => console.error('Failed to refresh devices:', err));
   };
 
   // =======================
@@ -226,7 +249,12 @@ function App() {
                     <td className="p-3 border">{device.hostname || 'Unknown'}</td>
                     <td className="p-3 border">{device.ip}</td>
                     <td className="p-3 border">{device.mac}</td>
-                    <td className="p-3 border capitalize">{device.status}</td>
+
+                    {/* Status badge */}
+                    <td className="p-3 border">
+                      <StatusBadge status={device.status} />
+                    </td>
+
                     <td className="p-3 border">{formatDuration(device.online_duration)}</td>
                     <td className="p-3 border">{isBlocked ? 'Yes' : 'No'}</td>
                     <td className="p-3 border">
