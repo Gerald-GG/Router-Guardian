@@ -48,9 +48,12 @@ const StatusBadge = ({ status }) => {
 
 function App() {
   // =======================
-  // API Base URL for local development
+  // API Base URL for dev/prod
   // =======================
-  const BASE_URL = 'http://localhost:5000';
+  const BASE_URL =
+    import.meta.env.MODE === 'development'
+      ? 'http://localhost:5000'
+      : 'https://router-guardian.onrender.com';
 
   // =======================
   // State definitions
@@ -65,7 +68,6 @@ function App() {
   const [ssid, setSsid] = useState('Fetching...');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const [viewMode, setViewMode] = useState('laptop');
 
   // =======================
   // Fetch SSID on load
@@ -83,10 +85,7 @@ function App() {
   const fetchDevices = () => {
     fetch(`${BASE_URL}/devices`)
       .then(res => res.json())
-      .then(data => {
-        console.log('[DEBUG] Fetched devices:', data);
-        setDevices(data);
-      })
+      .then(data => setDevices(data))
       .catch(err => console.error('Failed to fetch devices:', err));
   };
 
@@ -158,8 +157,6 @@ function App() {
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
-
-  console.log('[DEBUG] Filtered devices:', filteredDevices);
 
   const sortedDevices = [...filteredDevices].sort((a, b) => {
     const valA = a[sortKey] ?? '';
