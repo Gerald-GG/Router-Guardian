@@ -9,14 +9,14 @@ from dotenv import load_dotenv
 # ==============================
 # Import scanner functions
 # ==============================
-from scanner.device_scanner import scan_network, get_gateway_ip
+from scanner.device_scanner import scan_network, get_gateway_ip as original_get_gateway_ip
+import netifaces
 
 # ==============================
 # Load environment variables from .env in project root
 # ==============================
 load_dotenv()
 
-# Example: reading a SECRET_KEY or API_URL from .env
 SECRET_KEY = os.getenv("SECRET_KEY", "default_secret")
 API_URL = os.getenv("API_URL", "http://localhost:5000")
 
@@ -25,6 +25,22 @@ API_URL = os.getenv("API_URL", "http://localhost:5000")
 # ==============================
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing for frontend access
+
+# ==============================
+# Improved get_gateway_ip with safe fallback
+# ==============================
+def get_gateway_ip():
+    try:
+        gateways = netifaces.gateways()
+        if 'default' in gateways and netifaces.AF_INET in gateways['default']:
+            default_gateway = gateways['default'][netifaces.AF_INET][0]
+            print(f"[DEBUG] Detected gateway IP: {default_gateway}")
+            return default_gateway
+        else:
+            raise Exception("No IPv4 default gateway found. Ensure you're connected to a network.")
+    except Exception as e:
+        print(f"[ERROR] get_gateway_ip failed: {e}")
+        raise
 
 # ==============================
 # Before each request: log method and URL for debugging

@@ -32,10 +32,6 @@ Router-Guardian/
 │ └── ...
 └── README.md
 
-markdown
-Copy
-Edit
-
 ---
 
 ## ⚙️ **Backend**
