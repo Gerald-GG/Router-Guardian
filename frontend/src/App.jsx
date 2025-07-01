@@ -48,9 +48,9 @@ const StatusBadge = ({ status }) => {
 
 function App() {
   // =======================
-  // API Base URL for Render deployment
+  // API Base URL for local development
   // =======================
-  const BASE_URL = 'https://router-guardian.onrender.com';
+  const BASE_URL = 'http://localhost:5000';
 
   // =======================
   // State definitions
@@ -83,7 +83,10 @@ function App() {
   const fetchDevices = () => {
     fetch(`${BASE_URL}/devices`)
       .then(res => res.json())
-      .then(data => setDevices(data))
+      .then(data => {
+        console.log('[DEBUG] Fetched devices:', data);
+        setDevices(data);
+      })
       .catch(err => console.error('Failed to fetch devices:', err));
   };
 
@@ -155,6 +158,8 @@ function App() {
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
+
+  console.log('[DEBUG] Filtered devices:', filteredDevices);
 
   const sortedDevices = [...filteredDevices].sort((a, b) => {
     const valA = a[sortKey] ?? '';
